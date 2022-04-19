@@ -16,16 +16,16 @@ class Service {
   });
 
   /// The ROS connection.
-  Ros ros;
+  Ros? ros;
 
   /// Name of the service.
-  String name;
+  String? name;
 
   /// Type of the service.
-  String type;
+  String? type;
 
   /// Advertiser that is listened to for service requests when advertising.
-  Stream _advertiser;
+  Stream? _advertiser;
 
   /// Checks whether or not the service is currently advertising.
   bool get isAdvertised => _advertiser != null;
@@ -35,20 +35,20 @@ class Service {
     // The service can't be called if it's currently advertising.
     if (isAdvertised) return Future.value(false);
     // Set up the response receiver by filtering data from the ROS node by the ID generated.
-    final callId = ros.requestServiceCaller(name);
-    final receiver = ros.stream.where((message) => message['id'] == callId).map(
+    final callId = ros!.requestServiceCaller(name!);
+    final receiver = ros!.stream!.where((message) => message['id'] == callId).map(
         (message) => message['result'] == null
             ? Future.error(message['values'])
             : Future.value(message['values']));
     // Wait for the receiver to receive a single response and then return.
     final completer = Completer();
-    StreamSubscription listener;
+    late StreamSubscription listener;
     listener = receiver.listen((d) {
       listener.cancel();
       completer.complete(d);
     });
     // Actually send the request.
-    ros.send(Request(
+    ros!.send(Request(
       op: 'call_service',
       id: callId,
       service: name,
@@ -62,17 +62,17 @@ class Service {
   Future<void> advertise(ServiceHandler handler) async {
     if (isAdvertised) return;
     // Send the advertise request.
-    ros.send(Request(
+    ros!.send(Request(
       op: 'advertise_service',
       type: type,
       service: name,
     ));
     // Listen for requests, forward them to the handler and then
     // send the response back to the ROS node.
-    _advertiser = ros.stream
+    _advertiser = ros!.stream!
         .where((message) => message['service'] == name)
         .asyncMap((req) => handler(req['args']).then((resp) {
-              ros.send(Request(
+              ros!.send(Request(
                 op: 'service_response',
                 id: req.id,
                 service: name,
@@ -85,7 +85,7 @@ class Service {
   // Stop advertising the service.
   void unadvertise() {
     if (!isAdvertised) return;
-    ros.send(Request(
+    ros!.send(Request(
       op: 'unadvertise_service',
       service: name,
     ));

@@ -14,31 +14,31 @@ class ActionClient {
     this.omitResult,
   });
 
-  Ros ros;
+  Ros? ros;
 
-  String serverName;
+  String? serverName;
 
-  String actionName;
+  String? actionName;
 
-  int timeout;
+  int? timeout;
 
-  bool omitFeedback;
+  bool? omitFeedback;
 
-  bool omitStatus;
+  bool? omitStatus;
 
-  bool omitResult;
+  bool? omitResult;
 
-  Map<String, StreamController> goals = {};
+  Map<String?, StreamController> goals = {};
 
-  Topic feedbacker;
+  late Topic feedbacker;
 
-  Topic statuser;
+  late Topic statuser;
 
-  Topic resulter;
+  late Topic resulter;
 
-  Topic goaler;
+  late Topic goaler;
 
-  Topic canceler;
+  late Topic canceler;
 
   List<StreamSubscription> subs = [];
 
@@ -72,34 +72,34 @@ class ActionClient {
     await goaler.advertise();
     await canceler.advertise();
 
-    if (!omitStatus) {
+    if (!omitStatus!) {
       await statuser.subscribe();
-      subs.add(statuser.subscription.listen((message) {
+      subs.add(statuser.subscription!.listen((message) {
         for (var status in message['status_list']) {
-          String g = status['goal_id']['id'];
+          String? g = status['goal_id']['id'];
           goals[g] ??= StreamController.broadcast();
-          goals[g].add({'status': status});
+          goals[g]!.add({'status': status});
         }
       }));
     }
 
-    if (!omitFeedback) {
+    if (!omitFeedback!) {
       await feedbacker.subscribe();
-      subs.add(feedbacker.subscription.listen((message) {
-        String g = message['status']['goal_id']['id'];
+      subs.add(feedbacker.subscription!.listen((message) {
+        String? g = message['status']['goal_id']['id'];
         goals[g] ??= StreamController.broadcast();
-        goals[g].add({'status': message['status']});
-        goals[g].add({'feedback': message['feedback']});
+        goals[g]!.add({'status': message['status']});
+        goals[g]!.add({'feedback': message['feedback']});
       }));
     }
 
-    if (!omitResult) {
+    if (!omitResult!) {
       await resulter.subscribe();
-      subs.add(resulter.subscription.listen((message) {
-        String g = message['status']['goal_id']['id'];
+      subs.add(resulter.subscription!.listen((message) {
+        String? g = message['status']['goal_id']['id'];
         goals[g] ??= StreamController.broadcast();
-        goals[g].add({'status': message['status']});
-        goals[g].add({'result': message['result']});
+        goals[g]!.add({'status': message['status']});
+        goals[g]!.add({'result': message['result']});
       }));
     }
   }

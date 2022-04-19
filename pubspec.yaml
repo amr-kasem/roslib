@@ -1,20 +1,19 @@
 name: roslib
 description: Interface with a ROS node over websockets with rosbridge, heavily influenced by roslibjs and follows the same structure.
 version: 0.0.3
-author: Conrad Heidebrecht <conrad.heidebrecht@gmail.com>
 homepage: https://github.com/eternali/roslib
 
 environment:
-  sdk: ">=2.2.2 <3.0.0"
+  sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
-  web_socket_channel: ^1.0.12
+  web_socket_channel: ^2.1.0
 
 dev_dependencies:
-  test: ^1.2.0
-#   flutter:
-#     sdk: flutter
-#   flutter_test:
-#     sdk: flutter
+  test: ^1.19.5
+  flutter:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
 
-# flutter:
+flutter:

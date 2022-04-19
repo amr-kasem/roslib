@@ -20,28 +20,28 @@ class Topic {
         assert(throttleRate >= 0);
 
   /// The ROS connection.
-  Ros ros;
+  Ros? ros;
 
   /// Stream subscribers to the topic can listen to.
-  Stream subscription;
+  Stream? subscription;
 
   /// Name of the topic.
-  String name;
+  String? name;
 
   /// Message type the topic uses.
-  String type;
+  String? type;
 
   /// Subscription ID provided by [ros].
-  String subscribeId;
+  String? subscribeId;
 
   /// Advertiser ID provided by [ros].
-  String advertiseId;
+  String? advertiseId;
 
   /// Checks whether or not the topic is currently advertising.
   bool get isAdvertised => advertiseId != null;
 
   /// Publisher ID provided by [ros].
-  String publishId;
+  String? publishId;
 
   /// The type of compression to use, like 'png' or 'cbor'.
   ///
@@ -77,8 +77,8 @@ class Topic {
   Future<void> subscribe() async {
     if (subscribeId == null) {
       // Create the listenable broadcast subscription stream.
-      subscription = ros.stream.where((message) => message['topic'] == name);
-      subscribeId = ros.requestSubscriber(name);
+      subscription = ros!.stream!.where((message) => message['topic'] == name);
+      subscribeId = ros!.requestSubscriber(name!);
       // Send the subscribe request to ROS.
       await safeSend(Request(
         op: 'subscribe',
@@ -111,7 +111,7 @@ class Topic {
   Future<void> publish(dynamic message) async {
     // Advertise the topic and then send the publish request.
     await advertise();
-    publishId = ros.requestPublisher(name);
+    publishId = ros!.requestPublisher(name!);
     await safeSend(Request(
       op: 'publish',
       topic: name,
@@ -125,7 +125,7 @@ class Topic {
   Future<void> advertise() async {
     if (!isAdvertised) {
       // Send the advertisement request.
-      advertiseId = ros.requestAdvertiser(name);
+      advertiseId = ros!.requestAdvertiser(name!);
       await safeSend(Request(
         op: 'advertise',
         id: advertiseId,
@@ -142,7 +142,7 @@ class Topic {
   /// Wait for the connection to close and then reset advertising variables.
   Future<void> watchForClose() async {
     if (!reconnectOnClose) {
-      await ros.statusStream.firstWhere((s) => s == Status.CLOSED);
+      await ros!.statusStream!.firstWhere((s) => s == Status.CLOSED);
       advertiseId = null;
     }
   }
@@ -164,10 +164,10 @@ class Topic {
   Future<void> safeSend(Request message) async {
     // Send the message but if we're not connected and the [reconnectOnClose] flag
     // is set, wait for ROS to reconnect and then resend the [message].
-    ros.send(message);
-    if (reconnectOnClose && ros.status != Status.CONNECTED) {
-      await ros.statusStream.firstWhere((s) => s == Status.CONNECTED);
-      ros.send(message);
+    ros!.send(message);
+    if (reconnectOnClose && ros!.status != Status.CONNECTED) {
+      await ros!.statusStream!.firstWhere((s) => s == Status.CONNECTED);
+      ros!.send(message);
     }
   }
 }

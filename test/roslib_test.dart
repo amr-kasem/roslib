@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 import 'package:roslib/roslib.dart';
 
 void main() {
-  Ros ros;
+  late Ros ros;
 
   setUp(() {
     ros = Ros(url: 'ws://localhost:9090');
@@ -47,7 +47,7 @@ void main() {
     // ROS is adding a subscriber, hence number of ids += 1
     expect(cmdVel.subscribeId, 'subscribe:/cmd_vel:1');
     expect(ros.ids, 1);
-    final listener = cmdVel.subscription.listen((data) async {
+    final listener = cmdVel.subscription!.listen((data) async {
       expect(data['msg'], msg);
       await cmdVel.unsubscribe();
       expect(cmdVel.subscribeId, isNull);

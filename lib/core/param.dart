@@ -9,10 +9,10 @@ class Param {
   Param({this.ros, this.name});
 
   /// The ROS connection.
-  Ros ros;
+  Ros? ros;
 
   /// Name of the parameter.
-  String name;
+  String? name;
 
   /// Get the parameter from the ROS node using the /rosapi/get_param service.
   Future get() {

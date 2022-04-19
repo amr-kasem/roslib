@@ -27,9 +27,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    ros = Ros(url: 'ws://10.0.2.2:9090');
+    ros = Ros(url: 'ws://0.0.0.0:9090');
     chatter = Topic(
-        ros: ros, name: '/chatter', type: "std_msgs/String", reconnectOnClose: true, queueLength: 10, queueSize: 10);
+        ros: ros,
+        name: '/chatter',
+        type: "std_msgs/String",
+        reconnectOnClose: true,
+        queueLength: 10,
+        queueSize: 10);
     super.initState();
   }
 
@@ -70,8 +75,12 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                   ActionChip(
-                    label: Text(snapshot.data == Status.CONNECTED ? 'DISCONNECT' : 'CONNECT'),
-                    backgroundColor: snapshot.data == Status.CONNECTED ? Colors.green[300] : Colors.grey[300],
+                    label: Text(snapshot.data == Status.CONNECTED
+                        ? 'DISCONNECT'
+                        : 'CONNECT'),
+                    backgroundColor: snapshot.data == Status.CONNECTED
+                        ? Colors.green[300]
+                        : Colors.grey[300],
                     onPressed: () {
                       print(snapshot.data);
                       if (snapshot.data != Status.CONNECTED) {

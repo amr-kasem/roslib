@@ -22,46 +22,46 @@ class Request {
   });
 
   /// Requested operation.
-  String op;
+  String? op;
 
   /// ID to distinguish request or object operating on.
-  String id;
+  String? id;
 
   /// Message or service type.
-  String type;
+  String? type;
 
   /// Topic name operating on.
-  String topic;
+  String? topic;
 
   /// Message object (generally JSON).
   dynamic msg;
 
   /// Latch the topic when publishing.
-  bool latch;
+  bool? latch;
 
   /// The type of compression to use, like 'png' or 'cbor'.
-  String compression;
+  String? compression;
 
   /// The rate (in ms between messages) at which to throttle the topic.
-  int throttleRate;
+  int? throttleRate;
 
   /// The queue length at the bridge side used when subscribing.
-  int queueLength;
+  int? queueLength;
 
   /// The queue created at the bridge side for republishing topics.
-  int queueSize;
+  int? queueSize;
 
   /// Service name operating on.
-  String service;
+  String? service;
 
   /// Arguments of the request (JSON).
-  Map<String, dynamic> args;
+  Map<String, dynamic>? args;
 
   /// Values returned from a request.
   dynamic values;
 
   /// Boolean value indicating the success of the operation.
-  bool result;
+  bool? result;
 
   factory Request.fromJson(dynamic jsonData) {
     return Request(
