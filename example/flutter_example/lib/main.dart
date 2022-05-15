@@ -111,7 +111,7 @@ class _HomePageState extends State<HomePage> {
                                 onPressed: snapshot.data == Status.CONNECTED
                                     ? null
                                     : () {
-                                        _client.setGoal();
+                                        _client.setGoal(goal: {'order': 20});
                                       },
                               ),
                               ActionChip(

@@ -71,9 +71,9 @@ class ActionClient {
     return true;
   }
 
-  void setGoal({int order = 20}) async {
+  void setGoal({required Map<String, dynamic> goal}) async {
     await _goal.advertise();
-    _actionGoal = ActionGoal(order);
+    _actionGoal = ActionGoal(goal);
     final msg = _actionGoal;
     await _goal.publish(msg);
   }

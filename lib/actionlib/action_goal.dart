@@ -17,8 +17,8 @@ class ActionGoal {
   ActionServerStatus status = ActionServerStatus.READY;
   final _x = DateTime.now().millisecondsSinceEpoch;
   late final Map<String, dynamic> _header, _goalId;
-  int order;
-  ActionGoal(this.order) {
+  Map<String, dynamic> goal;
+  ActionGoal(this.goal) {
     _header = {'seq': _x.toInt(), 'stamp': _x, 'frame_id': 'map'};
     _goalId = {'stamp': _x, 'id': '$_x'};
   }
@@ -27,7 +27,7 @@ class ActionGoal {
     return {
       'header': _header,
       'goal_id': _goalId,
-      'goal': {'order': order},
+      'goal': goal,
     };
   }
 
