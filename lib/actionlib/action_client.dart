@@ -1,110 +1,110 @@
 // Copyright (c) 2019 Conrad Heidebrecht.
 
 import 'dart:async';
+import 'dart:developer';
+import 'package:roslib/actionlib/action_goal.dart';
 import 'package:roslib/core/core.dart';
 
 class ActionClient {
-  ActionClient({
-    this.ros,
-    this.serverName,
-    this.actionName,
-    this.timeout,
-    this.omitFeedback,
-    this.omitStatus,
-    this.omitResult,
-  });
+  Ros ros;
 
-  Ros? ros;
+  String serverName;
 
-  String? serverName;
+  String actionName;
+  String packageName;
+  late Topic _feedback;
 
-  String? actionName;
+  late Topic _status;
 
-  int? timeout;
+  late Topic _result;
 
-  bool? omitFeedback;
+  late Topic _goal;
 
-  bool? omitStatus;
+  late Topic _cancel;
 
-  bool? omitResult;
+  ActionGoal? _actionGoal;
 
-  Map<String?, StreamController> goals = {};
-
-  late Topic feedbacker;
-
-  late Topic statuser;
-
-  late Topic resulter;
-
-  late Topic goaler;
-
-  late Topic canceler;
-
-  List<StreamSubscription> subs = [];
-
-  Future<void> init() async {
-    feedbacker = Topic(
+  ActionClient(
+      {required this.ros,
+      required this.serverName,
+      required this.actionName,
+      required this.packageName}) {
+    _feedback = Topic(
       ros: ros,
       name: '$serverName/feedback',
-      type: '${actionName}Feedback',
+      type: '$packageName/${actionName}Feedback',
     );
-    statuser = Topic(
+    _status = Topic(
       ros: ros,
       name: '$serverName/status',
       type: 'actionlib_msgs/GoalStatusArray',
+      reconnectOnClose: true,
+      queueLength: 10,
+      queueSize: 10,
     );
-    resulter = Topic(
+    _result = Topic(
       ros: ros,
       name: '$serverName/result',
-      type: '${actionName}Result',
+      type: '$packageName/${actionName}Result',
+      reconnectOnClose: true,
+      queueLength: 10,
+      queueSize: 10,
     );
-    goaler = Topic(
+    _goal = Topic(
       ros: ros,
       name: '$serverName/goal',
-      type: '${actionName}Goal',
+      type: '$packageName/${actionName}Goal',
     );
-    canceler = Topic(
+    _cancel = Topic(
       ros: ros,
       name: '$serverName/cancel',
       type: 'actionlib_msgs/GoalID',
     );
+  }
 
-    await goaler.advertise();
-    await canceler.advertise();
+  Future<bool> connect() async {
+    await _feedback.subscribe();
+    await _status.subscribe();
+    await _result.subscribe();
+    await _goal.advertise();
+    await _cancel.advertise();
+    return true;
+  }
 
-    if (!omitStatus!) {
-      await statuser.subscribe();
-      subs.add(statuser.subscription!.listen((message) {
-        for (var status in message['status_list']) {
-          String? g = status['goal_id']['id'];
-          goals[g] ??= StreamController.broadcast();
-          goals[g]!.add({'status': status});
-        }
-      }));
-    }
+  void setGoal({int order = 20}) async {
+    await _goal.advertise();
+    _actionGoal = ActionGoal(order);
+    final msg = _actionGoal;
+    await _goal.publish(msg);
+  }
 
-    if (!omitFeedback!) {
-      await feedbacker.subscribe();
-      subs.add(feedbacker.subscription!.listen((message) {
-        String? g = message['status']['goal_id']['id'];
-        goals[g] ??= StreamController.broadcast();
-        goals[g]!.add({'status': message['status']});
-        goals[g]!.add({'feedback': message['feedback']});
-      }));
-    }
+  Stream? get feedback => _feedback.subscription!.map(
+        (event) => event['msg']['feedback'],
+      );
+  Stream get status => _status.subscription!.map(
+        (event) {
+          final statusList = (event['msg']['status_list'] as List);
+          if (statusList.isEmpty || _actionGoal == null) {
+            return ActionServerStatus.NOTSET;
+          } else {
+            _actionGoal!.status =
+                ActionServerStatus.values[statusList.last['status']];
+            return _actionGoal!.status;
+          }
+        },
+      );
 
-    if (!omitResult!) {
-      await resulter.subscribe();
-      subs.add(resulter.subscription!.listen((message) {
-        String? g = message['status']['goal_id']['id'];
-        goals[g] ??= StreamController.broadcast();
-        goals[g]!.add({'status': message['status']});
-        goals[g]!.add({'result': message['result']});
-      }));
+  void cancel() {
+    if (_actionGoal != null) {
+      _cancel.publish(_actionGoal!.goalId);
+      // _actionGoal = null;
     }
   }
 
-  void cancel() {}
-
-  void dispose() {}
+  void dispose() {
+    _feedback.unsubscribe();
+    _status.unsubscribe();
+    _result.unsubscribe();
+    _goal.unadvertise();
+  }
 }

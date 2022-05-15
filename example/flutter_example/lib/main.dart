@@ -24,23 +24,32 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   Ros ros;
   Topic chatter;
-
+  ActionClient _client;
   @override
   void initState() {
     ros = Ros(url: 'ws://0.0.0.0:9090');
     chatter = Topic(
-        ros: ros,
-        name: '/chatter',
-        type: "std_msgs/String",
-        reconnectOnClose: true,
-        queueLength: 10,
-        queueSize: 10);
+      ros: ros,
+      name: '/chatter',
+      type: "std_msgs/String",
+      reconnectOnClose: true,
+      queueLength: 10,
+      queueSize: 10,
+    );
+    _client = ActionClient(
+      ros: ros,
+      serverName: 'fibonacci',
+      actionName: 'FibonacciAction',
+      packageName: 'actionlib_tutorials',
+    );
+    initConnection();
     super.initState();
   }
 
   void initConnection() async {
-    ros.connect();
+    await ros.connect();
     await chatter.subscribe();
+    // await _client.connect();
     setState(() {});
   }
 
@@ -56,44 +65,75 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Roslib Example'),
       ),
-      body: StreamBuilder<Object>(
-          stream: ros.statusStream,
-          builder: (context, snapshot) {
-            return Center(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  StreamBuilder(
-                    stream: chatter.subscription,
-                    builder: (context2, snapshot2) {
-                      if (snapshot2.hasData) {
-                        return Text('${snapshot2.data['msg']}');
-                      } else {
-                        return CircularProgressIndicator();
-                      }
-                    },
-                  ),
-                  ActionChip(
-                    label: Text(snapshot.data == Status.CONNECTED
-                        ? 'DISCONNECT'
-                        : 'CONNECT'),
-                    backgroundColor: snapshot.data == Status.CONNECTED
-                        ? Colors.green[300]
-                        : Colors.grey[300],
-                    onPressed: () {
-                      print(snapshot.data);
-                      if (snapshot.data != Status.CONNECTED) {
-                        this.initConnection();
-                      } else {
-                        this.destroyConnection();
-                      }
-                    },
-                  ),
-                ],
-              ),
-            );
-          }),
+      body: FutureBuilder(
+        future: _client.connect(),
+        builder: (context, dataSnapshot) {
+          return dataSnapshot.connectionState == ConnectionState.waiting
+              ? Center(
+                  child: CircularProgressIndicator(),
+                )
+              : dataSnapshot.hasData
+                  ? StreamBuilder<Object>(
+                      stream: ros.statusStream,
+                      builder: (context, snapshot) {
+                        return Center(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              StreamBuilder(
+                                stream: _client.feedback,
+                                builder: (context2, snapshot2) {
+                                  if (snapshot2.hasData) {
+                                    return Text('${snapshot2.data}');
+                                  } else {
+                                    return Text('data not available');
+                                  }
+                                },
+                              ),
+                              StreamBuilder(
+                                stream: _client.status,
+                                builder: (context2, snapshot3) {
+                                  if (snapshot3.hasData) {
+                                    print(snapshot3.data);
+                                    return Text('${snapshot3.data}');
+                                  } else {
+                                    return Text('data not available');
+                                  }
+                                },
+                              ),
+                              ActionChip(
+                                label: Text('Send Goal'),
+                                backgroundColor:
+                                    snapshot.data == Status.CONNECTED
+                                        ? Colors.green[300]
+                                        : Colors.grey[300],
+                                onPressed: snapshot.data == Status.CONNECTED
+                                    ? null
+                                    : () {
+                                        _client.setGoal();
+                                      },
+                              ),
+                              ActionChip(
+                                label: Text('Cancel'),
+                                backgroundColor:
+                                    snapshot.data == Status.CONNECTED
+                                        ? Colors.green[300]
+                                        : Colors.grey[300],
+                                onPressed: () {
+                                  _client.cancel();
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    )
+                  : Center(
+                      child: Text('Error'),
+                    );
+        },
+      ),
     );
   }
 }
