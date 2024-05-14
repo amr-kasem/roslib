@@ -16,15 +16,17 @@ class ExampleApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
-  HomePage({Key key}) : super(key: key);
+  HomePage({
+    super.key,
+  });
 
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  Ros ros;
-  Topic chatter;
-  ActionClient _client;
+  late final Ros ros;
+  late final Topic chatter;
+  late final ActionClient _client;
   @override
   void initState() {
     ros = Ros(url: 'ws://0.0.0.0:9090');
@@ -47,9 +49,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void initConnection() async {
-    await ros.connect();
+    ros.connect();
     await chatter.subscribe();
-    // await _client.connect();
     setState(() {});
   }
 

@@ -1,7 +1,6 @@
 // Copyright (c) 2019 Conrad Heidebrecht.
 
 import 'dart:async';
-import 'dart:developer';
 import 'package:roslib/actionlib/action_goal.dart';
 import 'package:roslib/core/core.dart';
 
